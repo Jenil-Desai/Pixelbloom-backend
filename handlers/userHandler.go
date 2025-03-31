@@ -52,5 +52,29 @@ func SignInHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return nil
+	db := utils.Database()
+
+	var user models.User
+
+	if err := db.Where("email = ?", body.Email).Select("id", "email", "password").First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid Email",
+		})
+	}
+
+	if res := utils.CheckPasswordHash(body.Password, user.Password); res == false {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid Password",
+		})
+	}
+
+	if token, err := utils.GenerateToken(user.ID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate token" + err.Error(),
+		})
+	} else {
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"token": token,
+		})
+	}
 }
