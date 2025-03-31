@@ -19,13 +19,17 @@ func GenerateToken(id string) (string, error) {
 	return t, nil
 }
 
-func VerifyToken(tokenString string) (bool, error) {
+func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	return token.Valid, nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, err
+	}
 }

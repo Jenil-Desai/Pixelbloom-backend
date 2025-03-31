@@ -1,16 +1,18 @@
 package utils
 
 import (
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"context"
+	"github.com/jackc/pgx/v5"
 	"os"
 )
 
-func Database() *gorm.DB {
-	dsn := os.Getenv("DSN")
-	if db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{}); err != nil {
-		panic("failed to connect database")
+func Database() *pgx.Conn {
+	url := os.Getenv("DATABASE_URL")
+
+	if con, err := pgx.Connect(context.Background(), url); err != nil {
+		panic("Error connecting to database: " + err.Error())
 	} else {
-		return db
+		return con
 	}
+
 }

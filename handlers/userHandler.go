@@ -3,8 +3,10 @@ package handlers
 import (
 	"Pixelbloom-Backend/models"
 	"Pixelbloom-Backend/utils"
+	"context"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type SignUpRequest struct {
@@ -13,6 +15,7 @@ type SignUpRequest struct {
 }
 
 func SignUpHandler(c *fiber.Ctx) error {
+	ctx := context.Background()
 	body := new(SignUpRequest)
 
 	if err := c.BodyParser(body); err != nil {
@@ -22,26 +25,40 @@ func SignUpHandler(c *fiber.Ctx) error {
 	}
 
 	db := utils.Database()
+	defer db.Close(ctx)
 
-	var user models.User
+	row, err := db.Query(ctx, `SELECT * FROM "Users" WHERE email = $1 LIMIT 1`, body.Email)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database query error",
+		})
+	}
+	defer row.Close()
 
-	if err := db.Where("email = ?", body.Email).First(&user).Error; err == nil {
+	if row.Next() {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Email already exists",
 		})
 	}
 
 	hashedPassword, err := utils.HashPassword(body.Password)
-
-	id := uuid.NewString()
-
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to hash password",
 		})
 	}
 
-	db.Create(&models.User{ID: id, Email: body.Email, Password: hashedPassword})
+	args := pgx.NamedArgs{
+		"email":    body.Email,
+		"password": hashedPassword,
+	}
+
+	if _, err := db.Exec(ctx, `INSERT INTO "Users"(email,password) VALUES (@{email},@{password})`, args); err != nil {
+		fmt.Println("Error creating user:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create user",
+		})
+	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "User created successfully"})
 }
@@ -52,6 +69,7 @@ type SignInRequest struct {
 }
 
 func SignInHandler(c *fiber.Ctx) error {
+	ctx := context.Background()
 	body := new(SignInRequest)
 
 	if err := c.BodyParser(body); err != nil {
@@ -61,28 +79,49 @@ func SignInHandler(c *fiber.Ctx) error {
 	}
 
 	db := utils.Database()
+	defer db.Close(ctx)
 
-	var user models.User
+	rows, err := db.Query(ctx, `SELECT * FROM "Users" WHERE email = $1 LIMIT 1`, body.Email)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
+		})
+	}
+	defer rows.Close()
 
-	if err := db.Where("email = ?", body.Email).Select("id", "email", "password").First(&user).Error; err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Invalid Email",
+	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.User])
+	if err != nil || len(users) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
 		})
 	}
 
-	if res := utils.CheckPasswordHash(body.Password, user.Password); res == false {
+	if res := utils.CheckPasswordHash(body.Password, users[0].Password); !res {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid Password",
 		})
 	}
 
-	if token, err := utils.GenerateToken(user.ID); err != nil {
+	token, err := utils.GenerateToken(users[0].Id)
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to generate token" + err.Error(),
-		})
-	} else {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"token": token,
+			"error": "Failed to generate token",
 		})
 	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"token": token,
+	})
+}
+
+func GetLikedWallpapersHandler(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(string)
+	ctx := context.Background()
+
+	db := utils.Database()
+	defer db.Close(ctx)
+
+	return c.Status(200).JSON(fiber.Map{
+		"message": fmt.Sprintf("User %s liked wallpapers", userId),
+	})
 }
