@@ -23,6 +23,14 @@ func SignUpHandler(c *fiber.Ctx) error {
 
 	db := utils.Database()
 
+	var user models.User
+
+	if err := db.Where("email = ?", body.Email).First(&user).Error; err == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Email already exists",
+		})
+	}
+
 	hashedPassword, err := utils.HashPassword(body.Password)
 
 	id := uuid.NewString()
