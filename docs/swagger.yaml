@@ -1,0 +1,175 @@
+basePath: /api
+definitions:
+  handlers.SignInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.SignUpRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: This is the API documentation for the Pixelbloom application.
+  title: Pixelbloom Appliaction API
+  version: "1.0"
+paths:
+  /auth/signin:
+    post:
+      consumes:
+      - application/json
+      description: Sign in an existing user
+      parameters:
+      - description: User Sign In
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User signed in successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Invalid User or Password
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to generate token
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Sign In
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Sign up a new user
+      parameters:
+      - description: User Sign Up
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request or Email already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Database query error, Failed to hash password, or Failed to
+            create user
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Sign Up
+      tags:
+      - auth
+  /wallpapers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all wallpapers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of wallpapers
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to retrieve wallpapers from the database
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get Wallpapers
+      tags:
+      - wallpapers
+  /wallpapers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific wallpaper by its ID
+      parameters:
+      - description: Wallpaper ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wallpaper details
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Wallpaper ID is required
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Wallpaper not found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Failed to retrieve wallpaper
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - Bearer: []
+      summary: Get Wallpaper by ID
+      tags:
+      - wallpapers
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

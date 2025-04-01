@@ -14,6 +14,16 @@ type SignUpRequest struct {
 	Password string `json:"password"`
 }
 
+// @summary		Sign Up
+// @description	Sign up a new user
+// @tags		auth
+// @accept		json
+// @produce		json
+// @param		body	body	SignUpRequest	true	"User Sign Up"
+// @success		200	{object}	map[string]interface{}	"User created successfully"
+// @failure		400	{object}	map[string]interface{}	"Invalid request or Email already exists"
+// @failure		500	{object}	map[string]interface{}	"Database query error, Failed to hash password, or Failed to create user"
+// @router		/auth/signup [post]
 func SignUpHandler(c *fiber.Ctx) error {
 	ctx := context.Background()
 	body := new(SignUpRequest)
@@ -25,7 +35,12 @@ func SignUpHandler(c *fiber.Ctx) error {
 	}
 
 	db := utils.Database()
-	defer db.Close(ctx)
+	defer func(db *pgx.Conn, ctx context.Context) {
+		err := db.Close(ctx)
+		if err != nil {
+			fmt.Printf("Failed to close database connection %v", err)
+		}
+	}(db, ctx)
 
 	row, err := db.Query(ctx, `SELECT * FROM "Users" WHERE email = $1 LIMIT 1`, body.Email)
 	if err != nil {
@@ -68,6 +83,17 @@ type SignInRequest struct {
 	Password string `json:"password"`
 }
 
+// @summary		Sign In
+// @description	Sign in an existing user
+// @tags		auth
+// @accept		json
+// @produce		json
+// @param		body	body	SignInRequest	true	"User Sign In"
+// @success		200	{object}	map[string]interface{}	"User signed in successfully"
+// @failure		400	{object}	map[string]interface{}	"Invalid request"
+// @failure		401	{object}	map[string]interface{}	"Invalid User or Password"
+// @failure		500	{object}	map[string]interface{}	"Failed to generate token"
+// @router		/auth/signin [post]
 func SignInHandler(c *fiber.Ctx) error {
 	ctx := context.Background()
 	body := new(SignInRequest)
@@ -79,11 +105,16 @@ func SignInHandler(c *fiber.Ctx) error {
 	}
 
 	db := utils.Database()
-	defer db.Close(ctx)
+	defer func(db *pgx.Conn, ctx context.Context) {
+		err := db.Close(ctx)
+		if err != nil {
+			fmt.Printf("Failed to close database connection %v", err)
+		}
+	}(db, ctx)
 
 	rows, err := db.Query(ctx, `SELECT * FROM "Users" WHERE email = $1 LIMIT 1`, body.Email)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "User not found",
 		})
 	}
@@ -91,7 +122,7 @@ func SignInHandler(c *fiber.Ctx) error {
 
 	users, err := pgx.CollectRows(rows, pgx.RowToStructByName[models.User])
 	if err != nil || len(users) == 0 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "User not found",
 		})
 	}

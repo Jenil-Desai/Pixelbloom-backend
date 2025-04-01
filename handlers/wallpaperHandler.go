@@ -4,10 +4,21 @@ import (
 	"Pixelbloom-Backend/models"
 	"Pixelbloom-Backend/utils"
 	"context"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5"
 )
 
+// @summary		Get Wallpapers
+// @description	Retrieve all wallpapers
+// @tags		wallpapers
+// @accept		json
+// @produce		json
+// @success		200	{object}	map[string]interface{}	"List of wallpapers"
+// @failure		401	{object}	map[string]interface{}	"Unauthorized"
+// @failure		500	{object}	map[string]interface{}	"Failed to retrieve wallpapers from the database"
+// @router		/wallpapers [get]
+// @security		Bearer
 func WallpaperHandler(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(string)
 
@@ -19,7 +30,12 @@ func WallpaperHandler(c *fiber.Ctx) error {
 
 	ctx := context.Background()
 	db := utils.Database()
-	defer db.Close(ctx)
+	defer func(db *pgx.Conn, ctx context.Context) {
+		err := db.Close(ctx)
+		if err != nil {
+			fmt.Printf("Failed to close database connection %v", err)
+		}
+	}(db, ctx)
 
 	query := `
 		SELECT w.*, a.name AS artist_name, c.name AS category_name 
@@ -48,6 +64,19 @@ func WallpaperHandler(c *fiber.Ctx) error {
 	})
 }
 
+// @summary		Get Wallpaper by ID
+// @description	Retrieve a specific wallpaper by its ID
+// @tags		wallpapers
+// @accept		json
+// @produce		json
+// @param		id	path	string	true	"Wallpaper ID"
+// @success		200	{object}	map[string]interface{}	"Wallpaper details"
+// @failure		400	{object}	map[string]interface{}	"Wallpaper ID is required"
+// @failure		401	{object}	map[string]interface{}	"Unauthorized"
+// @failure		404	{object}	map[string]interface{}	"Wallpaper not found"
+// @failure		500	{object}	map[string]interface{}	"Failed to retrieve wallpaper"
+// @router		/wallpapers/{id} [get]
+// @Security 	Bearer
 func ParticularWallpaperHandler(c *fiber.Ctx) error {
 	userId := c.Locals("userId").(string)
 	if userId == "" {
@@ -58,7 +87,12 @@ func ParticularWallpaperHandler(c *fiber.Ctx) error {
 
 	ctx := context.Background()
 	db := utils.Database()
-	defer db.Close(ctx)
+	defer func(db *pgx.Conn, ctx context.Context) {
+		err := db.Close(ctx)
+		if err != nil {
+			fmt.Printf("Failed to close database connection %v", err)
+		}
+	}(db, ctx)
 
 	wallpaperId := c.Params("id")
 	if wallpaperId == "" {
@@ -77,7 +111,7 @@ func ParticularWallpaperHandler(c *fiber.Ctx) error {
 
 	wallpaper, err := pgx.CollectRows(row, pgx.RowToStructByName[models.Wallpapers])
 
-	if err != nil {
+	if err != nil || len(wallpaper) == 0 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Wallpaper not found",
 		})
