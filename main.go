@@ -16,7 +16,8 @@ func main() {
 	app := fiber.New()
 	api := app.Group("/api")
 
-	api.Route("/user", routes.UserRouter)
+	api.Route("/auth", routes.AuthRouter)
+	api.Route("/wallpapers", routes.LikeRouter)
 
 	log.Fatal(app.Listen(":3000"))
 }
