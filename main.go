@@ -17,6 +17,7 @@ func main() {
 	api := app.Group("/api")
 
 	api.Route("/auth", routes.AuthRouter)
+	api.Route("/wallpapers", routes.WallpaperRouter)
 	api.Route("/wallpapers", routes.LikeRouter)
 
 	log.Fatal(app.Listen(":3000"))

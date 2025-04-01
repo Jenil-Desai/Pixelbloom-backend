@@ -3,13 +3,15 @@ package models
 import "time"
 
 type Wallpapers struct {
-	Id           string
-	Title        string
-	ImageUrl     string
-	Likes        uint64
-	Platform     string
-	CategoriesId string
-	ArtistId     string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	Id           string    `json:"id"`
+	Title        string    `json:"title"`
+	ImageUrl     string    `json:"image_url"`
+	Likes        uint64    `json:"likes"`
+	Platform     string    `json:"platform"`
+	ArtistsId    string    `json:"artists_id"`
+	CategoriesId string    `json:"categories_id"`
+	CategoryName string    `json:"category_name"`
+	ArtistName   string    `json:"artist_name"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
