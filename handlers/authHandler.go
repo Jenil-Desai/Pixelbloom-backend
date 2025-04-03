@@ -63,12 +63,7 @@ func SignUpHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	args := pgx.NamedArgs{
-		"email":    body.Email,
-		"password": hashedPassword,
-	}
-
-	if _, err := db.Exec(ctx, `INSERT INTO "Users"(email,password) VALUES (@{email},@{password})`, args); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO "Users"(email,password) VALUES ($1,$2)`, body.Email, hashedPassword); err != nil {
 		fmt.Println("Error creating user:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user",

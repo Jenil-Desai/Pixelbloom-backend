@@ -7,5 +7,7 @@ import (
 )
 
 func LikeRouter(api fiber.Router) {
-	api.Get("/like-wallpaper", middlewares.VerifyToken, handlers.GetLikedWallpapersHandler)
+	api.Get("/liked-wallpapers", middlewares.VerifyToken, handlers.GetLikedWallpapersHandler)
+	api.Post("/:id/like", middlewares.VerifyToken, handlers.LikeWallpaperHandler)
+	api.Delete("/:id/like", middlewares.VerifyToken, handlers.UnlikeWallpaperHandler)
 }
