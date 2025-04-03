@@ -43,8 +43,9 @@ func main() {
 	}))
 
 	api.Route("/auth", routes.AuthRouter)
-	api.Route("/wallpapers", routes.WallpaperRouter)
 	api.Route("/wallpapers", routes.LikeRouter)
+	api.Route("/wallpapers", routes.BookmarkRouter)
+	api.Route("/wallpapers", routes.WallpaperRouter)
 
 	log.Fatal(app.Listen(":3000"))
 }
