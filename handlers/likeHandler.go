@@ -16,7 +16,7 @@ func GetLikedWallpapersHandler(c *fiber.Ctx) error {
 	db := utils.Database()
 	defer db.Close(ctx)
 
-	rows, err := db.Query(ctx, `SELECT w.* FROM "Wallpapers" w JOIN "LikedWallpapers" lw ON w.id = lw."wallpaperId" WHERE lw."userId" = $1`, userId)
+	rows, err := db.Query(ctx, `SELECT w.*, a.name AS artist_name, c.name AS category_name FROM "Wallpapers" w JOIN "LikedWallpapers" lw ON w.id = lw."wallpaperId" JOIN "Artists" a ON w."artistsId" = a.id JOIN "Categories" c ON w."categoriesId" = c.id WHERE lw."userId" = $1`, userId)
 	defer rows.Close()
 
 	if err != nil {
