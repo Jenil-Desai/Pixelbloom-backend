@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
 	"log"
+	"os"
 )
 
 // @title 						Pixelbloom Appliaction API
@@ -22,9 +23,11 @@ import (
 // @contact.url					https://GitHub.com/Jenil-Desai/Pixelbloom-Backend
 // @contact.email				jenildev91@gmail.com
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	app := fiber.New()
