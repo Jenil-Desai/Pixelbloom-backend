@@ -32,9 +32,7 @@ func GetLikedWallpapersHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"wallpapers": wallpapers,
-	})
+	return c.Status(200).JSON(wallpapers)
 }
 
 func LikeWallpaperHandler(c *fiber.Ctx) error {

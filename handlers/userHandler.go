@@ -30,7 +30,5 @@ func GetUserHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"user": user,
-	})
+	return c.Status(200).JSON(user)
 }

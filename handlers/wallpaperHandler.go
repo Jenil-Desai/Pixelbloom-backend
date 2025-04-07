@@ -59,9 +59,7 @@ func WallpaperHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"wallpapers": wallpapers,
-	})
+	return c.Status(fiber.StatusOK).JSON(wallpapers)
 }
 
 // @summary		Get Wallpaper by ID
@@ -117,7 +115,5 @@ func ParticularWallpaperHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"wallpaper": wallpaper[0],
-	})
+	return c.Status(fiber.StatusOK).JSON(wallpaper[0])
 }

@@ -31,9 +31,7 @@ func GetBookmarks(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"wallpapers": wallpapers,
-	})
+	return c.Status(200).JSON(wallpapers)
 }
 
 func BookmarkWallpaperHandler(c *fiber.Ctx) error {
