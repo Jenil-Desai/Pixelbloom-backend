@@ -10,6 +10,7 @@ import (
 )
 
 type SignUpRequest struct {
+	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -63,7 +64,7 @@ func SignUpHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	if _, err := db.Exec(ctx, `INSERT INTO "Users"(email,password) VALUES ($1,$2)`, body.Email, hashedPassword); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO "Users"(name,email,password) VALUES ($1,$2,$3)`, body.Name, body.Email, hashedPassword); err != nil {
 		fmt.Println("Error creating user:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user",

@@ -30,5 +30,5 @@ func GetUserHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(200).JSON(user)
+	return c.Status(200).JSON(user[0])
 }
