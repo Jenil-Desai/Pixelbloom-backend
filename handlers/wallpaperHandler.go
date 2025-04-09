@@ -39,9 +39,10 @@ func WallpaperHandler(c *fiber.Ctx) error {
 
 	query := `
 		SELECT w.*, a.name AS artist_name, c.name AS category_name 
-		FROM "Wallpapers" w 
+		FROM "Wallpapers" w
 		JOIN "Artists" a ON w."artistsId" = a.id 
 		JOIN "Categories" c ON w."categoriesId" = c.id
+		ORDER BY w."likes" DESC
 	`
 
 	rows, err := db.Query(ctx, query)
